@@ -1,0 +1,19 @@
+# OSX
+#
+.DS_Store
+
+# node.js
+#
+node_modules
+*.log
+.nvm
+package-lock.json
+
+# vscode
+#
+.vscode
+.vs
+
+# custom
+#
+.env
