@@ -1,5 +1,6 @@
-import { assertEnvironment } from '../helpers/Utils.js';
+import { assertEnvironment, relaunchApp } from '../helpers/Utils.js';
 import SignIn from '../screenobjects/SignIn.js';
+import Home from '../screenobjects/Home.js';
 
 describe('Sign In Tests', () => {
   it('should fill sign in form and login', async () => {
@@ -9,5 +10,12 @@ describe('Sign In Tests', () => {
       password: assertEnvironment('USER_PASSWORD'),
       rememberMe: false,
     });
+
+    expect(await Home.isDisplayed()).toBe(true);
+  });
+
+  it('should expect user to not be remembered', async () => {
+    await relaunchApp(assertEnvironment('BUNDLE_ID'));
+    expect(await Home.screen.isDisplayed()).toBe(false);
   });
 });

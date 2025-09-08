@@ -39,3 +39,12 @@ export function getByClass(className: string): ChainablePromiseElement {
 export function getByXpath(xpath: string): ChainablePromiseElement {
   return driver.isIOS ? $(`-ios predicate string:xpath("${xpath}")`) : $(`android=new UiSelector().xpath("${xpath}")`);
 }
+
+export async function relaunchApp(identifier: string) {
+  const appIdentifier = { [driver.isAndroid ? 'appId' : 'bundleId']: identifier };
+  const terminateCommand = 'mobile: terminateApp';
+  const launchCommand = `mobile: ${driver.isAndroid ? 'activateApp' : 'launchApp'}`;
+
+  await driver.execute(terminateCommand, appIdentifier);
+  await driver.execute(launchCommand, appIdentifier);
+}
