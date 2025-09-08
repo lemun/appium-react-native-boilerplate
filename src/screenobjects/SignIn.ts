@@ -24,12 +24,20 @@ class SignIn extends App {
     return getByTestId('signIn:button.signIn');
   }
 
+  private get signInWithBiometrics() {
+    return getByTestId('signIn:button.signInWithBiometrics');
+  }
+
   private get rememberMeCheckbox() {
     return getByTestId('signIn:checkbox.rememberMe');
   }
 
   async tapOnSignInButton() {
     await this.signInButton.click();
+  }
+
+  async tapOnSignInWithBiometricsButton() {
+    await this.signInWithBiometrics.click();
   }
 
   async toggleRememberMeCheckbox(value: boolean) {
