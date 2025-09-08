@@ -48,3 +48,23 @@ export async function relaunchApp(identifier: string) {
   await driver.execute(terminateCommand, appIdentifier);
   await driver.execute(launchCommand, appIdentifier);
 }
+
+export async function executeInHomeScreenContext(action: () => Promise<void>): Promise<any> {
+  if (driver.isAndroid) {
+    return await action();
+  }
+
+  const activeAppInfo: any = await driver.execute('mobile: activeAppInfo');
+  await driver.updateSettings({ defaultActiveApplication: 'com.apple.springboard' });
+  let result: any;
+
+  try {
+    result = await action();
+  } catch (e) {
+    /* do nothing */
+  }
+
+  await driver.updateSettings({ defaultActiveApplication: activeAppInfo.bundleId });
+
+  return result;
+}
