@@ -21,9 +21,10 @@ const log = {
   header: (msg) => console.log(`\n${colors.bright}${msg}${colors.reset}`),
 };
 
-function checkCommand(command, name, required = true) {
+function checkCommand(command, name, required = true, customValidation = null) {
   try {
-    execSync(`${command} --version`, { stdio: 'ignore' });
+    const validationCommand = customValidation || `${command} --version`;
+    execSync(validationCommand, { stdio: 'ignore' });
     log.success(`${name} is installed`);
     return true;
   } catch (error) {
@@ -98,7 +99,7 @@ function checkiOSSetup() {
   }
   
   // Check iOS Simulator
-  if (!checkCommand('xcrun simctl list', 'iOS Simulator', false)) {
+  if (!checkCommand('xcrun', 'iOS Simulator', false, 'xcrun simctl list')) {
     log.warning('iOS Simulator might not be available');
   }
   
