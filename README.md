@@ -4,7 +4,10 @@
 [![Appium](https://img.shields.io/badge/Appium-662d91?style=for-the-badge&logo=detox&logoColor=white)](https://github.com/appium/appium)
 [![WebDriverIO](https://img.shields.io/badge/-WebdriverIO-EA5906?style=for-the-badge&logo=webdriverio&logoColor=white)](https://github.com/webdriverio/webdriverio)
 [![Mocha](https://img.shields.io/badge/-Mocha-8D6748?style=for-the-badge&logo=mocha&logoColor=white)](https://mochajs.org)
-**React Native Appium boilreplate** with strictly-typed Screen Objects, cross-platform element selector utility, and ready-to-run WebDriverIO configs for Android & iOS.
+
+</br>
+
+**React Native Appium boilerplate** with strictly-typed Screen Objects, cross-platform element selector utility, and ready-to-run WebDriverIO configs for Android & iOS.
 
 ## **Technologies**
 - **TypeScript** - Strictly typed framework implementation
@@ -24,8 +27,17 @@ npm i && npm i -g appium
 ```
 
 3) Create .env (copy the template and fill in values)
+```bash
+cp .env.example .env
+# Edit .env with your specific values
 ```
+
+4) Validate your setup
+```bash
+npm run setup:validate
 ```
+
+## Environment Variable Table
 | Key | Example | What it is / Where to get it |
 |---|---|---|
 | `ANDROID_DEVICE_NAME` | `Pixel_8_Pro_API_34` | AVD name (emulator) or device ID. List emulators: `emulator -list-avds`. List devices: `adb devices -l`. |
@@ -41,7 +53,42 @@ npm i && npm i -g appium
 | `USER_USERNAME` | `test.user@example.com` | Test account username |
 | `USER_PASSWORD` | `SuperSecret123` | Password for the above test user. Prefer secrets in CI; `.env` is fine for local only. |
 
+
+### **Running Tests**
+
+Run Android tests:
+```bash
+npm run android
+```
+
+Run iOS tests:
+```bash
+npm run ios
+```
+
+Run code quality checks:
+```bash
+npm run validate        # Run linting and formatting checks
+npm run lint           # Run ESLint only
+npm run format         # Auto-format code with Prettier
+```
+
 ## **Highlights**
+
+### **Project Structure**
+```
+src/
+├── helpers/           # Utility functions and cross-platform helpers
+│   ├── Utils.ts      # Generic helper methods and element selectors
+│   ├── Biometrics.ts # Biometric authentication handling
+│   └── Android.ts    # Android-specific automation helpers
+├── screenobjects/     # Page Object Model implementation
+│   ├── App.ts        # Base screen class with common functionality
+│   ├── components/   # Reusable UI components
+│   └── *.ts          # Individual screen objects
+└── specs/            # Test specifications
+    └── *.spec.ts     # Test files
+```
 
 ### **How are screen objects structured?**
 All screens are modeled as strongly typed objects with reusable methods:
@@ -86,12 +133,3 @@ async submitSignInForm({
 }
 
 ```
-
-### **Helpers and their purposes**
-**Utils.ts:** Reusable, generic helper methods; mostly stateless and pure
-**Biometrics.ts:** Handling of biometric prompts
-**Android.ts:** Automates Android settings to enable fingerprint unlock via navigation of the setup wizard
-
-
----
-**Work in progress:** I will continue writing and updating this section soon.
