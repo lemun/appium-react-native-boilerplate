@@ -1,15 +1,15 @@
 {
-  "name": "appium-boilerplate",
+  "name": "appium-react-native-boilerplate",
   "version": "1.0.0",
   "author": "Shai Sinai",
   "description": "Appium + WebDriverIO boilerplate for cross-platform React Native E2E testing",
-  "homepage": "https://github.com/lemun/appium-boilerplate#readme",
+  "homepage": "https://github.com/lemun/appium-react-native-boilerplate#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lemun/appium-boilerplate.git"
+    "url": "git+https://github.com/lemun/appium-react-native-boilerplate.git"
   },
   "bugs": {
-    "url": "https://github.com/lemun/appium-boilerplate/issues"
+    "url": "https://github.com/lemun/appium-react-native-boilerplate/issues"
   },
   "license": "ISC",
   "keywords": [],
