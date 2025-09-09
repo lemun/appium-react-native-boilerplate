@@ -1,10 +1,12 @@
 # Appium Boilerplate (React Native, TypeScript)
 
+[![CI/CD Pipeline](https://github.com/lemun/appium-react-native-boilerplate/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/lemun/appium-react-native-boilerplate/actions)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Appium](https://img.shields.io/badge/Appium-662d91?style=for-the-badge&logo=detox&logoColor=white)](https://github.com/appium/appium)
 [![WebDriverIO](https://img.shields.io/badge/-WebdriverIO-EA5906?style=for-the-badge&logo=webdriverio&logoColor=white)](https://github.com/webdriverio/webdriverio)
 [![Mocha](https://img.shields.io/badge/-Mocha-8D6748?style=for-the-badge&logo=mocha&logoColor=white)](https://mochajs.org)
-**React Native Appium boilreplate** with strictly-typed Screen Objects, cross-platform element selector utility, and ready-to-run WebDriverIO configs for Android & iOS.
+[![Code Style: Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
+**React Native Appium boilerplate** with strictly-typed Screen Objects, cross-platform element selector utility, and ready-to-run WebDriverIO configs for Android & iOS.
 
 ## **Technologies**
 - **TypeScript** - Strictly typed framework implementation
@@ -15,7 +17,7 @@
 ## Quickstart (5 minutes)
 1) Clone
 ```bash
-git clone https://github.com/lemun/appium-boilerplate.git && cd appium-boilreplate
+git clone https://github.com/lemun/appium-react-native-boilerplate.git && cd appium-react-native-boilerplate
 ```
 
 2) Install deps
@@ -24,7 +26,14 @@ npm i && npm i -g appium
 ```
 
 3) Create .env (copy the template and fill in values)
+```bash
+cp .env.example .env
+# Edit .env with your specific values
 ```
+
+4) Validate your setup
+```bash
+npm run setup:validate
 ```
 | Key | Example | What it is / Where to get it |
 |---|---|---|
@@ -93,5 +102,76 @@ async submitSignInForm({
 **Android.ts:** Automates Android settings to enable fingerprint unlock via navigation of the setup wizard
 
 
+### **Running Tests**
+
+Run Android tests:
+```bash
+npm run android
+```
+
+Run iOS tests:
+```bash
+npm run ios
+```
+
+Run code quality checks:
+```bash
+npm run validate        # Run linting and formatting checks
+npm run lint           # Run ESLint only
+npm run format         # Auto-format code with Prettier
+```
+
+### **Project Structure**
+```
+src/
+├── helpers/           # Utility functions and cross-platform helpers
+│   ├── Utils.ts      # Generic helper methods and element selectors
+│   ├── Biometrics.ts # Biometric authentication handling
+│   └── Android.ts    # Android-specific automation helpers
+├── screenobjects/     # Page Object Model implementation
+│   ├── App.ts        # Base screen class with common functionality
+│   ├── components/   # Reusable UI components
+│   └── *.ts          # Individual screen objects
+└── specs/            # Test specifications
+    └── *.spec.ts     # Test files
+```
+
+### **Key Features**
+- 🔄 **Cross-platform**: Single codebase for iOS and Android
+- 📱 **Biometric Testing**: Built-in support for fingerprint/Face ID testing
+- 🎯 **Type Safety**: Full TypeScript implementation with strict typing
+- 🔧 **Flexible Configuration**: Environment-based configuration management
+- 📊 **Page Objects**: Clean, maintainable test structure using POM pattern
+- ⚡ **Ready to Use**: Pre-configured WebDriverIO and Appium setup
+- 🚀 **CI/CD Ready**: GitHub Actions workflow included
+- 📝 **Code Quality**: ESLint, Prettier, and Husky pre-commit hooks
+
+### **Development**
+
+This project includes modern development tools and practices:
+
+- **ESLint**: Code linting with TypeScript and WebDriverIO rules
+- **Prettier**: Code formatting for consistent style
+- **Husky**: Git hooks for automated quality checks
+- **GitHub Actions**: CI/CD pipeline with automated testing
+- **Setup Validation**: Cross-platform environment validation
+
+### **Prerequisites**
+
+- **Node.js** (v16 or higher)
+- **npm** or **yarn**
+- **Appium** (install globally: `npm i -g appium`)
+
+**For Android testing:**
+- Android SDK with `ANDROID_HOME` environment variable set
+- Android emulator or physical device
+- ADB in PATH
+
+**For iOS testing (macOS only):**
+- Xcode with Command Line Tools
+- iOS Simulator
+- `xcrun` command available
+
 ---
-**Work in progress:** I will continue writing and updating this section soon.
+
+**Contributing:** Pull requests are welcome! Please ensure your code follows the existing patterns, passes all quality checks (`npm run validate`), and includes appropriate tests.
