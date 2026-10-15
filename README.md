@@ -223,8 +223,11 @@ logs, screenshots and Allure results as an artifact.
 - `src/config/appiumServer.test.ts` starts neither Appium nor a device. It runs each platform config through
   `@wdio/appium-service` and Appium's own CLI parser, then checks the address and the insecure features the server
   would actually get. It runs in `npm run validate`.
-- `npm audit` still reports advisories inside the Appium drivers' bundled dependencies, which npm cannot update or
-  override. [SECURITY.md](SECURITY.md) lists each one and explains why none of them is reachable in this setup.
+- As of 2026-10-15, `npm audit` reports 20 flagged packages (15 critical, 4 high, 1 moderate). All of them trace back
+  to dependencies bundled inside the Appium drivers, which npm cannot update or override.
+  [SECURITY.md](SECURITY.md) lists each advisory and explains why none is reachable with the configs in this repo:
+  loopback-only server, local app paths, no MJPEG URL. Adding options that make the driver fetch a URL you supply
+  changes that analysis.
 
 ## Credits
 
