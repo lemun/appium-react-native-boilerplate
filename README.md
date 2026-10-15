@@ -1,135 +1,218 @@
 # Appium Boilerplate (React Native, TypeScript)
 
+[![CI](https://github.com/lemun/appium-react-native-boilerplate/actions/workflows/ci.yml/badge.svg)](https://github.com/lemun/appium-react-native-boilerplate/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Appium](https://img.shields.io/badge/Appium-662d91?style=for-the-badge&logo=detox&logoColor=white)](https://github.com/appium/appium)
-[![WebDriverIO](https://img.shields.io/badge/-WebdriverIO-EA5906?style=for-the-badge&logo=webdriverio&logoColor=white)](https://github.com/webdriverio/webdriverio)
-[![Mocha](https://img.shields.io/badge/-Mocha-8D6748?style=for-the-badge&logo=mocha&logoColor=white)](https://mochajs.org)
+[![Appium](https://img.shields.io/badge/Appium_3-662d91?style=for-the-badge&logo=appium&logoColor=white)](https://appium.io)
+[![WebdriverIO](https://img.shields.io/badge/WebdriverIO_10-EA5906?style=for-the-badge&logo=webdriverio&logoColor=white)](https://webdriver.io)
+[![Mocha](https://img.shields.io/badge/Mocha-8D6748?style=for-the-badge&logo=mocha&logoColor=white)](https://mochajs.org)
 
-</br>
+Cross-platform (iOS + Android) end-to-end tests for React Native apps with **WebdriverIO 10**, **Appium 3** and
+**Mocha**, written in strict TypeScript. Specs run against the public
+[WebdriverIO native demo app](https://github.com/webdriverio/native-demo-app) (a React Native / Expo app), so you can
+clone the repo and run them without your own app. Swap in your app with one environment variable.
 
-**React Native Appium boilerplate** with strictly-typed Screen Objects, cross-platform element selector utility, and ready-to-run WebDriverIO configs for Android & iOS.
+> **Status:** the specs are written against demo app v2.2.0 and pass typecheck, lint and unit tests. They have not
+> yet been run on a simulator or emulator in this revision.
 
-## **Technologies**
-- **TypeScript** - Strictly typed framework implementation
-- **WebdriverIO** - Test runner and automation library
-- **Appium** - Cross-platform mobile automation (iOS & Android)
-- **Mocha** - Test framework with lifecycle hooks and reporters
+## What the specs cover
 
-## Quickstart (5 minutes)
-1) Clone
-```bash
-git clone https://github.com/lemun/appium-boilerplate.git && cd appium-boilreplate
-```
+| Spec                       | What it shows                                                                               |
+| -------------------------- | ------------------------------------------------------------------------------------------- |
+| `navigation.spec.ts`       | Tab bar navigation and a side menu, using typed screen objects                              |
+| `login.spec.ts`            | Login and sign-up forms, inline validation errors, native alerts                            |
+| `forms.spec.ts`            | Text input, switch state per platform, the native picker, enabled vs disabled buttons       |
+| `swipe.spec.ts`            | Horizontal carousel swipes (W3C Actions) and scrolling to an element below the fold         |
+| `drag-and-drop.spec.ts`    | Solving a 3x3 drag-and-drop puzzle                                                          |
+| `webview.spec.ts`          | Hybrid testing: find the right WebView context, automate the page, return to native         |
+| `data-persistence.spec.ts` | Relaunching the app: persisted storage survives, in-memory state does not                   |
+| `biometrics.spec.ts`       | Face ID / Touch ID on iOS simulators, fingerprint on Android emulators (match and no match) |
 
-2) Install deps
-```bash
-npm i && npm i -g appium
-```
+## Stack
 
-3) Create .env (copy the template and fill in values)
-```bash
-cp .env.example .env
-# Edit .env with your specific values
-```
+- **WebdriverIO 10** (`@wdio/cli`, local runner, Mocha framework, spec + Allure reporters, Appium service)
+- **Appium 3** with the **XCUITest** and **UiAutomator2** drivers, installed as project dependencies (no global install)
+- **TypeScript 6** in strict mode (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `erasableSyntaxOnly`)
+- **ESLint 10** flat config (`typescript-eslint` strict type-checked + `eslint-plugin-wdio`) and **Prettier 3**
+- **Allure 3** for HTML reports, Node's built-in test runner for offline unit tests
+- **Node.js 24 LTS** (`.nvmrc`; Node >= 22.19 works)
 
-4) Validate your setup
-```bash
-npm run setup:validate
-```
+## Quickstart
 
-## Environment Variable Table
-| Key | Example | What it is / Where to get it |
-|---|---|---|
-| `ANDROID_DEVICE_NAME` | `Pixel_8_Pro_API_34` | AVD name (emulator) or device ID. List emulators: `emulator -list-avds`. List devices: `adb devices -l`. |
-| `ANDROID_PLATFORM_VERSION` | `14` | Android OS version on the device/emulator. Check with `adb shell getprop ro.build.version.release` or see the AVD config. |
-| `AUTO_GRANT_PERMISSIONS` | `true` | If `true`, Appium auto-grants runtime permissions on Android. |
-| `DEFAULT_PIN` | `1234` | The PIN your tests enter for Biometrics. Use the value configured in your Android emulator. |
-| `INCORRECT_PIN` | `1111` | Any value that is not the real device PIN. |
-| `IOS_DEVICE_NAME` | `iPhone 15` | iOS Simulator name. See available devices with `xcrun simctl list devices`. |
-| `IOS_PLATFORM_VERSION` | `17.5` | iOS runtime version. See with `xcrun simctl list runtimes` or in the Simulator app. |
-| `AUTO_ACCEPT_ALERTS` | `true` | If `true`, Appium auto-accepts iOS system alerts (push permissions, etc.). |
-| `REACT_NATIVE_PATH` | `../my-rn-app` | **Absolute Path to the React Native app under test** (absolute). |
-| `BUNDLE_ID` | com.`company`.myapp | The app identifier |
-| `USER_USERNAME` | `test.user@example.com` | Test account username |
-| `USER_PASSWORD` | `SuperSecret123` | Password for the above test user. Prefer secrets in CI; `.env` is fine for local only. |
+1. Clone and install. Appium and both drivers come from `package.json`, nothing is installed globally.
 
+   ```bash
+   git clone https://github.com/lemun/appium-react-native-boilerplate.git
+   cd appium-react-native-boilerplate
+   nvm install   # optional: uses .nvmrc (Node 24)
+   npm ci
+   ```
 
-### **Running Tests**
+2. Download the demo app (pinned to v2.2.0, SHA-256 verified, saved to the git-ignored `apps/` folder):
 
-Run Android tests:
-```bash
-npm run android
-```
+   ```bash
+   npm run app:download -- ios       # iOS simulator build, ~16 MB
+   npm run app:download -- android   # Android APK, ~124 MB
+   ```
 
-Run iOS tests:
-```bash
-npm run ios
-```
+3. Optional: create `.env` from the template. Every variable has a default, so an empty file is fine.
 
-Run code quality checks:
-```bash
-npm run validate        # Run linting and formatting checks
-npm run lint           # Run ESLint only
-npm run format         # Auto-format code with Prettier
-```
+   ```bash
+   cp .env.example .env
+   ```
 
-## **Highlights**
+4. Check your setup. The doctor is read-only and tells you exactly what to fix (Xcode, simulator, Android SDK,
+   emulator, app binaries).
 
-### **Project Structure**
+   ```bash
+   npm run doctor            # both platforms
+   npm run doctor -- ios     # one platform
+   ```
+
+5. Run the suite:
+
+   ```bash
+   npm run ios       # boots the simulator named IOS_DEVICE_NAME (default "iPhone 17 Pro")
+   npm run android   # uses the running emulator/device, or boots ANDROID_AVD
+   ```
+
+   Run one spec with `npm run ios -- --spec src/specs/login.spec.ts`.
+
+6. Open the HTML report (Allure 3, no Java required):
+
+   ```bash
+   npm run report
+   ```
+
+## Environment variables
+
+All optional; see [`.env.example`](.env.example). WebdriverIO loads `.env` automatically.
+
+| Key                                       | Default             | What it is                                                                 |
+| ----------------------------------------- | ------------------- | -------------------------------------------------------------------------- |
+| `IOS_DEVICE_NAME`                         | `iPhone 17 Pro`     | Simulator name: `xcrun simctl list devices available`                      |
+| `IOS_PLATFORM_VERSION`                    | (any)               | iOS runtime, for example `26.5`: `xcrun simctl list runtimes`              |
+| `IOS_UDID`                                |                     | Pin one exact simulator                                                    |
+| `IOS_BIOMETRIC_TYPE`                      | `faceId`            | `touchId` for Touch ID devices                                             |
+| `ANDROID_AVD`                             |                     | AVD to boot: `emulator -list-avds`. Without it, start an emulator yourself |
+| `ANDROID_DEVICE_NAME`                     | `Android Emulator`  | Label for the device                                                       |
+| `ANDROID_PLATFORM_VERSION`                | (any)               | Android version, for example `15`                                          |
+| `ANDROID_UDID`                            |                     | Pick one device when several are listed by `adb devices`                   |
+| `DEVICE_PIN`                              | `1234`              | Screen-lock PIN set by the Android fingerprint enrollment helper           |
+| `FINGERPRINT_ID` / `WRONG_FINGERPRINT_ID` | `1` / `2`           | Enrolled and unknown emulator fingerprints                                 |
+| `APP_PATH`                                | demo app in `apps/` | Your own `.app`/`.zip` (simulator build) or `.apk`                         |
+| `APP_ID`                                  | demo app id         | Bundle id / package name of `APP_PATH` (used to relaunch the app)          |
+| `APP_LOCALE`                              | `en`                | Locale of the UI copy used in assertions                                   |
+| `SPEC_FILE_RETRIES`                       | `0`                 | Retry a failed spec file N times                                           |
+
+## Scripts
+
+| Command                                   | What it does                                                |
+| ----------------------------------------- | ----------------------------------------------------------- |
+| `npm run ios` / `npm run android`         | Run the E2E suite (WebdriverIO starts and stops Appium)     |
+| `npm run app:download [-- ios\|android]`  | Download and verify the pinned demo app                     |
+| `npm run doctor` (alias `setup:validate`) | Read-only environment check with fixes                      |
+| `npm run typecheck`                       | `tsc --noEmit` over specs, helpers, configs and scripts     |
+| `npm run lint` / `lint:fix`               | ESLint (type-aware)                                         |
+| `npm run format` / `format:check`         | Prettier                                                    |
+| `npm run test:unit`                       | Offline unit tests (`node --test`)                          |
+| `npm run validate`                        | typecheck + lint + format check + unit tests (what CI runs) |
+| `npm run report`                          | Build and open the Allure report from `allure-results/`     |
+
+## Project structure
+
 ```
 src/
-├── helpers/           # Utility functions and cross-platform helpers
-│   ├── Utils.ts      # Generic helper methods and element selectors
-│   ├── Biometrics.ts # Biometric authentication handling
-│   └── Android.ts    # Android-specific automation helpers
-├── screenobjects/     # Page Object Model implementation
-│   ├── App.ts        # Base screen class with common functionality
-│   ├── components/   # Reusable UI components
-│   └── *.ts          # Individual screen objects
-└── specs/            # Test specifications
-    └── *.spec.ts     # Test files
+├── config/
+│   ├── demoApp.ts            # pinned demo app version, asset names, checksums, app ids
+│   └── appPath.ts            # APP_PATH / APP_ID resolution with actionable errors
+├── helpers/
+│   ├── Utils.ts              # cross-platform selectors, relaunchApp, executeInHomeScreenContext
+│   ├── WebView.ts            # find, enter and leave the right WebView context
+│   ├── Biometrics.ts         # Face ID / Touch ID / fingerprint via the drivers' mobile: commands
+│   ├── Android.ts            # Android Settings automation: PIN + fingerprint enrollment
+│   ├── Keyboard.ts           # hide the keyboard on both platforms
+│   └── TranslationManager.ts # typed UI-copy lookup with locale fallback (+ unit test)
+├── i18n/                     # UI copy used in assertions (en.json)
+├── screenobjects/
+│   ├── AppScreen.ts          # base class: root element + waitForIsShown
+│   ├── *Screen.ts            # one class per screen
+│   └── components/           # TabBar, NativeAlert, Picker
+└── specs/                    # *.spec.ts
+scripts/                      # download-app.ts, doctor.ts (run by Node's TypeScript support)
+wdio.conf.ts                  # shared config: Appium service, Mocha, reporters, failure screenshots
+wdio.ios.conf.ts / wdio.android.conf.ts
 ```
 
-### **How are screen objects structured?**
-All screens are modeled as strongly typed objects with reusable methods:
+## How screen objects are structured
 
-```typescript
-// Declaring screen view TestID
-const SCREEN_SELECTOR = 'signIn:view.container';
+Each screen extends `AppScreen` with the id of its root element. Element getters stay private; specs only call
+intention-revealing methods, and assertions read user-facing copy from `src/i18n` instead of hard-coding it.
 
-// Extending App (inherits waitForIsShown)
-class SignIn extends App {
-   constructor() {
-    super(SCREEN_SELECTOR);
+```ts
+class LoginScreen extends AppScreen {
+  constructor() {
+    super('Login-screen');
   }
 
-  get screen() {
-    return getByTestId(SCREEN_SELECTOR);
+  private get emailField() {
+    return getByAccessibilityId('input-email');
   }
 
-  // Mapping private getters for TestIDs and selectors  
-  private get usernameField() { return getByTestId('signIn:field.username'); }
-  private get passwordField() { return getByTestId('signIn:field.password'); }
-  private get signInButton() { return getByTestId('signIn:button.signIn'); }
-
-  // Defining Public methods that perform user flows (tap, setValue, etc.)
-  async tapOnSignInButton() {
-    await this.signInButton.click();
+  private get passwordField() {
+    return getByAccessibilityId('input-password');
   }
 
-async submitSignInForm({
-    username,
-    password,
-    rememberMe = true,
-  }: {
-    username: string;
-    password: string;
-    rememberMe?: boolean;
-  }) {
-    await this.usernameField.setValue(username);
+  private get loginButton() {
+    return getByAccessibilityId('button-LOGIN');
+  }
+
+  async submitLoginForm({ email, password }: Credentials): Promise<void> {
+    await this.emailField.setValue(email);
     await this.passwordField.setValue(password);
-
-    await this.signInButton.click();
+    await hideKeyboard(this.root);
+    await this.loginButton.scrollIntoView({ scrollableElement: this.root });
+    await this.loginButton.click();
+  }
 }
-
 ```
+
+```ts
+it('logs in with valid credentials', async () => {
+  await LoginScreen.submitLoginForm(VALID);
+
+  await NativeAlert.waitForIsShown();
+  expect(await NativeAlert.text()).toBe(`${t('login.success.title')}\n${t('login.success.message')}`);
+});
+```
+
+### Selectors in React Native
+
+| In your app              | Helper                                                 | iOS               | Android         |
+| ------------------------ | ------------------------------------------------------ | ----------------- | --------------- |
+| `testID="x"`             | `getByTestId('x')`                                     | accessibility id  | `resource-id`   |
+| `accessibilityLabel="x"` | `getByAccessibilityId('x')`                            | accessibility id  | `content-desc`  |
+| visible text             | `getByText` / `getByTextContains` / `getByTextMatches` | `label` predicate | UiSelector text |
+
+The demo app sets `testID` on iOS and `accessibilityLabel` on Android, so its screen objects use
+`getByAccessibilityId`. WebdriverIO 10 selectors are strict: `$()` throws when more than one element matches, so
+selectors must be unique (use `$$()` for lists).
+
+## Testing your own React Native app
+
+1. Build a simulator `.app` (zip it or point at the folder) or a debug `.apk`.
+2. Set `APP_PATH` and `APP_ID` in `.env`.
+3. Replace the screen objects and specs with your screens; keep the helpers, components and configs.
+
+## CI
+
+`.github/workflows/ci.yml` runs `npm run validate` on every push and pull request. A manual run
+(`workflow_dispatch` with **android-e2e** checked) also runs the full suite on an Android emulator with
+[`reactivecircus/android-emulator-runner`](https://github.com/ReactiveCircus/android-emulator-runner) and uploads
+logs, screenshots and Allure results as an artifact.
+
+## Credits
+
+The demo app and parts of the helpers (fingerprint enrollment, `relaunchApp`, `executeInHomeScreenContext`, the
+WebView context approach) build on the MIT-licensed
+[webdriverio/appium-boilerplate](https://github.com/webdriverio/appium-boilerplate) and
+[webdriverio/native-demo-app](https://github.com/webdriverio/native-demo-app). See [LICENSE](LICENSE).

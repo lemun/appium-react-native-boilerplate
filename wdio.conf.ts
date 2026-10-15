@@ -1,132 +1,65 @@
-import dotenv from 'dotenv';
-
-dotenv.config();
-
 /**
- * All not needed configurations, for this boilerplate, are removed.
- * If you want to know which configuration options you have then you can
- * check https://webdriver.io/docs/configurationfile
+ * Shared WebdriverIO configuration. Platform configs (`wdio.ios.conf.ts`, `wdio.android.conf.ts`) extend it
+ * with capabilities. WebdriverIO loads `.env` automatically, so every variable in `.env.example` can be set there.
+ * Option reference: https://webdriver.io/docs/configurationfile
  */
 export const config: WebdriverIO.Config = {
-  //
-  // ====================
-  // Runner Configuration
-  // ====================
-  port: 4723,
-  // ==================
-  // Specify Test Files
-  // ==================
+  runner: 'local',
+  // The capabilities are defined in the platform configs.
+  capabilities: [],
   specs: ['./src/specs/**/*.spec.ts'],
-  exclude: [
-    // 'path/to/excluded/specs'
-  ],
-  //
-  // ============
-  // Capabilities
-  // ============
-  // The capabilities are specified in:
-  // - wdio.android.conf.ts
-  // - wdio.ios.conf.ts
-  //
-  /**
-   * NOTE: This is just a place holder and will be overwritten by each specific configuration
-   */
   maxInstances: 1,
-  capabilities: [
-    {
-      // ============
-      // Capabilities
-      // ============
-      // For all capabilities please check
-      // https://github.com/appium/appium-uiautomator2-driver
-      'appium:orientation': 'PORTRAIT',
-      'appium:newCommandTimeout': 240,
-    },
-  ],
-  //
-  // ===================
-  // Test Configurations
-  // ===================
-  // Define all options that are relevant for the WebdriverIO instance here
-  //
-  // Level of logging verbosity: trace | debug | info | warn | error | silent
-  logLevel: 'info',
-  // Configure specific log levels for different loggers
-  logLevels: {
-    webdriver: 'silent', // Suppress all webdriver HTTP request/response logs
-    '@wdio/appium-service': 'warn', // Only show warnings and errors
-  },
-  // If you only want to run your tests until a specific amount of tests have failed use
-  // bail (default is 0 - don't bail, run all tests).
-  bail: 1,
-  // Set a base URL in order to shorten url command calls. If your `url` parameter starts
-  // with `/`, the base url gets prepended, not including the path portion of your baseUrl.
-  // If your `url` parameter starts without a scheme or `/` (like `some/path`), the base url
-  // gets prepended directly.
-  baseUrl: 'http://localhost',
-  // Default timeout for all waitFor* commands.
-  /**
-   * NOTE: This has been increased for more stable Appium Native app
-   * tests because they can take a bit longer.
-   */
-  waitforTimeout: 45000,
-  // Default timeout in milliseconds for request
-  // if browser driver or grid doesn't send response
-  connectionRetryTimeout: 120000,
-  // Default request retries count
-  connectionRetryCount: 3,
-  // Test runner services
+
+  logLevel: 'warn',
+  outputDir: './logs',
+  bail: 0,
+  waitforTimeout: 20_000,
+  connectionRetryTimeout: 180_000,
+  connectionRetryCount: 1,
+
+  // WebdriverIO starts and stops the project-local Appium 3 server (and its drivers from package.json).
+  port: 4723,
   services: [
     [
       'appium',
       {
-        command: 'appium',
+        logPath: './logs',
+        appiumStartTimeout: 60_000,
         args: {
-          allowInsecure: 'adb_shell',
+          // Lets the Android helpers run `adb shell` (screen lock + fingerprint enrollment).
+          allowInsecure: ['uiautomator2:adb_shell'],
         },
       },
     ],
   ],
-  // Framework you want to run your specs with.
-  // see: https://webdriver.io/docs/frameworks
-  //
-  // Make sure you have the wdio adapter package for the specific framework installed
-  // before running any tests.
+
   framework: 'mocha',
-  // The number of times to retry the entire spec file when it fails as a whole
-  // specFileRetries: 1,
-  //
-  // Delay in seconds between the spec file retry attempts
-  // specFileRetriesDelay: 0,
-  //
-  // Whether or not retried spec files should be retried immediately or deferred to the end of the queue
-  // specFileRetriesDeferred: false,
-  //
-  // Test reporter for stdout.
-  // The only one supported by default is 'dot'
-  // see also: https://webdriver.io/docs/dot-reporter
-  reporters: [
-    'spec',
-  ],
-  // Options to be passed to Mocha.
   mochaOpts: {
     ui: 'bdd',
-    /**
-     * NOTE: This has been increased for more stable Appium Native app
-     * tests because they can take a bit longer.
-     */
-    timeout: 3 * 60 * 1000, // 3min
+    // Native interactions are slow; a single test may legitimately take a couple of minutes on CI emulators.
+    timeout: 3 * 60 * 1000,
   },
-  //
-  // =====
-  // Hooks
-  // =====
-  // WebdriverIO provides several hooks you can use to interfere with the test process in order to enhance
-  // it and to build services around it. You can either apply a single function or an array of
-  // methods to it. If one of them returns with a promise, WebdriverIO will wait until that promise got
-  // resolved to continue.
-  //
-  /**
-   * NOTE: No Hooks are used in this project, but feel free to add them if you need them.
-   */
+  specFileRetries: Number(process.env['SPEC_FILE_RETRIES'] ?? 0),
+
+  reporters: [
+    'spec',
+    [
+      'allure',
+      {
+        outputDir: 'allure-results',
+        disableWebdriverStepsReporting: true,
+        reportedEnvironmentVars: { app: 'WebdriverIO native demo app' },
+      },
+    ],
+  ],
+
+  /** Save a screenshot of every failed test to ./logs (the Allure reporter attaches it to the report too). */
+  afterTest: async (test, _context, { passed }) => {
+    if (passed) {
+      return;
+    }
+
+    const name = `${test.parent} ${test.title}`.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+    await driver.saveScreenshot(`./logs/${name}.png`);
+  },
 };

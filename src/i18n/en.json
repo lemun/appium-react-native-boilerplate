@@ -1,0 +1,16 @@
+{
+  "login.success.title": "Success",
+  "login.success.message": "You are logged in!",
+  "login.biometrics.success": "You are logged in through {sensor}!",
+  "login.error.email": "Please enter a valid email address",
+  "login.error.password": "Please enter at least 8 characters",
+  "signUp.success.title": "Signed Up!",
+  "signUp.success.message": "You successfully signed up!",
+  "signUp.error.repeatPassword": "Please enter the same password",
+  "forms.alert.title": "This button is",
+  "forms.alert.message": "This button is active",
+  "forms.switch.turnOn": "Click to turn the switch ON",
+  "forms.switch.turnOff": "Click to turn the switch OFF",
+  "data.memory.empty": "— empty —",
+  "data.persisted.empty": "— nothing saved yet —"
+}

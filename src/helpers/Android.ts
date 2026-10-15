@@ -1,176 +1,91 @@
-import { assertEnvironment, getByTextMatches } from './Utils.js';
+import { envOr, getByTextMatches, isShownWithin } from './Utils.ts';
 
-class Android {
-  private get androidDeviceUnlock() {
-    return getByTextMatches('(?i)Device unlock.*');
-  }
+const STEP_TIMEOUT = 10_000;
 
-  private get androidSetScreenLock() {
-    return getByTextMatches('(?i)Set screen lock');
-  }
-
-  private get androidDismiss() {
-    return getByTextMatches('(?i)Dismiss');
-  }
-
-  private get androidFingerprintUnlock() {
-    return getByTextMatches('(?i)Fingerprint.*');
-  }
-
-  private get androidReEnterPin() {
-    return getByTextMatches('(?i)Re-enter your PIN');
-  }
-
-  private get androidMore() {
-    return getByTextMatches('(?i)MORE');
-  }
-
-  private get androidIagree() {
-    return getByTextMatches('(?i)I AGREE');
-  }
-
-  private get androidNext() {
-    return getByTextMatches('(?i)NEXT');
-  }
-
-  private get androidDone() {
-    return getByTextMatches('(?i)DONE');
-  }
-
-  private get androidPixelImprint() {
-    return getByTextMatches('(?i)Pixel Imprint');
-  }
-
-  private get androidTouchTheSensor() {
-    return getByTextMatches('(?i)Touch the sensor.*');
-  }
-
-  private get androidPutYourFinger() {
-    return getByTextMatches('(?i)Put your finger.*');
-  }
-
-  private get androidKeepLifting() {
-    return getByTextMatches('(?i)keep lifting.*');
-  }
-
-  private async tapOnAndroidDeviceUnlock() {
-    await this.androidDeviceUnlock.waitForDisplayed({ timeout: 10 * 1000 });
-    await this.androidDeviceUnlock.click();
-  }
-
-  private async tapOnAndroidFingerprintUnlock() {
-    await this.androidFingerprintUnlock.waitForDisplayed({ timeout: 10 * 1000 });
-    await this.androidFingerprintUnlock.click();
-  }
-
-  private async tapOnAndroidDismiss() {
-    await this.androidDismiss.waitForDisplayed({ timeout: 10 * 1000 });
-    await this.androidDismiss.click();
-  }
-
-  private async tapOnAndroidMore() {
-    await this.androidMore.waitForDisplayed({ timeout: 10 * 1000 });
-    await this.androidMore.click();
-  }
-
-  private async tapOnAndroidIagree() {
-    await this.androidIagree.waitForDisplayed({ timeout: 10 * 1000 });
-    await this.androidIagree.click();
-  }
-
-  private async tapOnAndroidNext() {
-    await this.androidNext.waitForDisplayed({ timeout: 10 * 1000 });
-    await this.androidNext.click();
-  }
-
-  private async tapOnAndroidDone() {
-    await this.androidDone.waitForDisplayed({ timeout: 10 * 1000 });
-    await this.androidDone.click();
-  }
-
-  private async tapOnAndroidPixelImprint() {
-    await this.androidPixelImprint.waitForDisplayed({ timeout: 10 * 1000 });
-    await this.androidPixelImprint.click();
-  }
-
-  private async setAndroidReEnterPin(pin: number) {
-    await this.androidReEnterPin.waitForDisplayed({ timeout: 10 * 1000 });
-    await this.executeAdbCommand(`input text ${pin} && input keyevent 66`);
-  }
-
+/**
+ * Android emulator Settings automation: set a screen-lock PIN and enroll a fingerprint, so apps that
+ * gate login behind `BiometricPrompt` can be tested. The wizard differs per Android version; the steps
+ * below cover Android 9 to 14+ on Google (Pixel) system images. OEM skins use other labels.
+ */
+class AndroidSettings {
   private get platformVersion(): number {
-    return parseInt(
-      ('platformVersion' in driver.capabilities ? driver.capabilities.platformVersion : '9') as string,
-      10,
-    );
+    const capabilities = driver.capabilities as Record<string, unknown>;
+    const version = capabilities['platformVersion'] ?? capabilities['appium:platformVersion'];
+
+    return typeof version === 'string' || typeof version === 'number' ? Number.parseInt(String(version), 10) : 0;
   }
 
-  private async executeAdbCommand(adbCommand: string) {
-    await driver.execute('mobile: shell', {
-      command: adbCommand,
-    });
+  private text(pattern: string) {
+    return getByTextMatches(`(?i)${pattern}`);
   }
 
-  private async fingerPrintWizard(pin: number) {
+  private async tap(pattern: string): Promise<void> {
+    const element = this.text(pattern);
+    await element.waitForDisplayed({ timeout: STEP_TIMEOUT });
+    await element.click();
+  }
+
+  private async shell(command: string, args: string[] = []): Promise<void> {
+    // Requires the Appium server to run with `--allow-insecure=uiautomator2:adb_shell` (see wdio.conf.ts).
+    await driver.execute('mobile: shell', { command, args });
+  }
+
+  private async reEnterPin(pin: string): Promise<void> {
+    await this.text('Re-enter your PIN').waitForDisplayed({ timeout: STEP_TIMEOUT });
+    await this.shell('input', ['text', pin]);
+    await this.shell('input', ['keyevent', '66']);
+  }
+
+  private async touchSensor(fingerprintId: number, prompt: string): Promise<void> {
+    await this.text(prompt).waitForDisplayed({ timeout: STEP_TIMEOUT });
+    await driver.execute('mobile: fingerprint', { fingerprintId });
+  }
+
+  private async dismissScreenLockNotification(): Promise<void> {
+    if (await isShownWithin(this.text('Set screen lock'), 2_000)) {
+      await this.tap('Dismiss');
+    }
+  }
+
+  /** Set a device PIN (`DEVICE_PIN`, default 1234) and enroll `fingerprintId` through the Settings wizard. */
+  async enrollFingerprint(fingerprintId: number): Promise<void> {
+    const pin = envOr('DEVICE_PIN', '1234');
+
+    await this.shell('locksettings', ['set-pin', pin]);
+    await this.shell('am', ['start', '-a', 'android.settings.SECURITY_SETTINGS']);
+
+    if (this.platformVersion >= 14) {
+      await this.text('Device unlock.*').waitForDisplayed({ timeout: STEP_TIMEOUT });
+      await this.dismissScreenLockNotification();
+      await this.tap('Device unlock');
+      await this.tap('.*Fingerprint.*');
+    } else {
+      await this.tap('.*Fingerprint.*');
+    }
+
     if (this.platformVersion >= 10) {
-      await this.postAndroidTenFingerPrintSetup(pin);
-    } else {
-      await this.tapOnAndroidNext();
-      await this.setAndroidReEnterPin(pin);
-    }
+      await this.reEnterPin(pin);
 
-    await this.androidTouchTheSensor.waitForDisplayed({ timeout: 10 * 1000 });
-    await driver.fingerPrint(pin);
-
-    await this.androidPutYourFinger.waitForDisplayed({ timeout: 10 * 1000 });
-    await driver.fingerPrint(pin);
-
-    await this.androidKeepLifting.waitForDisplayed({ timeout: 10 * 1000 });
-    await driver.fingerPrint(pin);
-
-    await this.tapOnAndroidDone();
-  }
-
-  private async postAndroidTenFingerPrintSetup(pin: number) {
-    await this.setAndroidReEnterPin(pin);
-
-    if (this.platformVersion >= 14) {
-      await this.tapOnAndroidPixelImprint();
-    }
-
-    if (this.platformVersion >= 12) {
-      await this.tapOnAndroidMore();
-      await this.tapOnAndroidIagree();
-    } else {
-      await this.tapOnAndroidNext();
-    }
-  }
-
-  async enableBiometricLogin() {
-    await this.executeAdbCommand(
-      `am start -a android.settings.SECURITY_SETTINGS && locksettings set-pin ${assertEnvironment('DEFAULT_PIN')}`,
-    );
-
-    if (this.platformVersion >= 14) {
-      await this.androidDeviceUnlock.waitForDisplayed({ timeout: 10 * 1000 });
-
-      try {
-        if (await this.androidSetScreenLock.isDisplayed()) {
-          await this.tapOnAndroidDismiss();
-        }
-      } catch (error) {
-        /* do nothing */
+      if (this.platformVersion >= 14) {
+        await this.tap('Pixel Imprint');
       }
 
-      await this.tapOnAndroidDeviceUnlock();
-
-      await this.tapOnAndroidFingerprintUnlock();
+      if (this.platformVersion >= 12) {
+        await this.tap('MORE');
+        await this.tap('I AGREE');
+      } else {
+        await this.tap('NEXT');
+      }
     } else {
-      await this.tapOnAndroidPixelImprint();
+      await this.tap('NEXT');
+      await this.reEnterPin(pin);
     }
 
-    await this.fingerPrintWizard(Number(assertEnvironment('DEFAULT_PIN')));
+    await this.touchSensor(fingerprintId, 'Touch the sensor.*');
+    await this.touchSensor(fingerprintId, 'Put your finger.*');
+    await this.touchSensor(fingerprintId, 'Keep lifting.*');
+    await this.tap('DONE');
   }
 }
 
-export default new Android();
+export default new AndroidSettings();

@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+
+# downloaded demo app binaries (see scripts/download-app.ts)
+apps/
+
+# test output
+logs/
+allure-results/
+allure-report/
+screenshots/
+*.log
+
+# local environment
+.env
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
