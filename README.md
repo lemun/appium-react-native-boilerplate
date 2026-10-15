@@ -223,6 +223,8 @@ logs, screenshots and Allure results as an artifact.
 - `src/config/appiumServer.test.ts` starts neither Appium nor a device. It runs each platform config through
   `@wdio/appium-service` and Appium's own CLI parser, then checks the address and the insecure features the server
   would actually get. It runs in `npm run validate`.
+- `npm audit` still reports advisories inside the Appium drivers' bundled dependencies, which npm cannot update or
+  override. [SECURITY.md](SECURITY.md) lists each one and explains why none of them is reachable in this setup.
 
 ## Credits
 
