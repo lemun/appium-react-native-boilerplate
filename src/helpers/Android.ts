@@ -26,7 +26,7 @@ class AndroidSettings {
   }
 
   private async shell(command: string, args: string[] = []): Promise<void> {
-    // Requires the Appium server to run with `--allow-insecure=uiautomator2:adb_shell` (see wdio.conf.ts).
+    // Requires the Appium server to run with `--allow-insecure uiautomator2:adb_shell` (see wdio.android.conf.ts).
     await driver.execute('mobile: shell', { command, args });
   }
 

@@ -124,7 +124,8 @@ All optional; see [`.env.example`](.env.example). WebdriverIO loads `.env` autom
 src/
 ├── config/
 │   ├── demoApp.ts            # pinned demo app version, asset names, checksums, app ids
-│   └── appPath.ts            # APP_PATH / APP_ID resolution with actionable errors
+│   ├── appPath.ts            # APP_PATH / APP_ID resolution with actionable errors
+│   └── appiumServer.test.ts  # offline check of the Appium server flags (loopback, insecure features)
 ├── helpers/
 │   ├── Utils.ts              # cross-platform selectors, relaunchApp, executeInHomeScreenContext
 │   ├── WebView.ts            # find, enter and leave the right WebView context
@@ -139,7 +140,7 @@ src/
 │   └── components/           # TabBar, NativeAlert, Picker
 └── specs/                    # *.spec.ts
 scripts/                      # download-app.ts, doctor.ts (run by Node's TypeScript support)
-wdio.conf.ts                  # shared config: Appium service, Mocha, reporters, failure screenshots
+wdio.conf.ts                  # shared config: loopback-only Appium service, Mocha, reporters, failure screenshots
 wdio.ios.conf.ts / wdio.android.conf.ts
 ```
 
@@ -209,6 +210,19 @@ selectors must be unique (use `$$()` for lists).
 (`workflow_dispatch` with **android-e2e** checked) also runs the full suite on an Android emulator with
 [`reactivecircus/android-emulator-runner`](https://github.com/ReactiveCircus/android-emulator-runner) and uploads
 logs, screenshots and Allure results as an artifact.
+
+## Security
+
+- **The Appium server listens on `127.0.0.1` only.** Appium's default is `0.0.0.0` (every network interface).
+  `appiumService()` in `wdio.conf.ts` always passes `--address 127.0.0.1`, so other machines on the network cannot
+  reach the server. The test runner connects over loopback too.
+- **One insecure Appium feature, on Android only:** `uiautomator2:adb_shell`. `wdio.android.conf.ts` enables it
+  because the Android fingerprint enrollment in `src/helpers/Android.ts` sets a screen-lock PIN and opens Settings
+  with `mobile: shell`. `biometrics.spec.ts` needs that enrollment. The iOS config enables no insecure features. If
+  you drop the biometrics spec on Android, remove `allowInsecure` from `wdio.android.conf.ts` as well.
+- `src/config/appiumServer.test.ts` starts neither Appium nor a device. It runs each platform config through
+  `@wdio/appium-service` and Appium's own CLI parser, then checks the address and the insecure features the server
+  would actually get. It runs in `npm run validate`.
 
 ## Credits
 

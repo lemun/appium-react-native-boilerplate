@@ -13,3 +13,6 @@
   because `scripts/` and unit tests run on Node's built-in type stripping.
 - When bumping the demo app, update `src/config/demoApp.ts` (version, asset names, SHA-256 from the GitHub release
   asset digests) and re-check the ids in the screen objects against the app source.
+- The Appium server binds to `127.0.0.1` (`appiumService()` in `wdio.conf.ts`). Enable an insecure Appium feature
+  only in the platform config whose specs need it, as a comma-separated string (Appium does not parse an array
+  passed through the service), and update `src/config/appiumServer.test.ts` to match.

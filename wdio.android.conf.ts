@@ -1,4 +1,4 @@
-import { config as baseConfig } from './wdio.conf.ts';
+import { appiumService, config as baseConfig } from './wdio.conf.ts';
 import { resolveAppPath } from './src/config/appPath.ts';
 import { DEMO_APP } from './src/config/demoApp.ts';
 
@@ -6,6 +6,11 @@ const env = process.env;
 
 export const config: WebdriverIO.Config = {
   ...baseConfig,
+  services: [
+    // `mobile: shell` is an insecure Appium feature. Only the Android fingerprint enrollment in
+    // src/helpers/Android.ts needs it (biometrics.spec.ts); the server still listens on loopback only.
+    appiumService({ allowInsecure: 'uiautomator2:adb_shell' }),
+  ],
   capabilities: [
     {
       platformName: 'Android',

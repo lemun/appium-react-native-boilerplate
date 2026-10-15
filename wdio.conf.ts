@@ -1,3 +1,26 @@
+import type { AppiumServerArguments, AppiumServiceConfig } from '@wdio/appium-service';
+
+/**
+ * The Appium server listens on loopback only. Appium's own default is `0.0.0.0` (every interface), which would let
+ * anyone on the network create sessions on this machine, and on Android run `adb shell` (see `wdio.android.conf.ts`).
+ */
+export const APPIUM_ADDRESS = '127.0.0.1';
+
+/**
+ * The `appium` service entry: WebdriverIO starts and stops the project-local Appium 3 server (and its drivers from
+ * package.json) as a child process. `args` become Appium CLI flags; the listen address is always loopback.
+ */
+export function appiumService(args: Omit<AppiumServerArguments, 'address'> = {}): [string, AppiumServiceConfig] {
+  return [
+    'appium',
+    {
+      logPath: './logs',
+      appiumStartTimeout: 60_000,
+      args: { ...args, address: APPIUM_ADDRESS },
+    },
+  ];
+}
+
 /**
  * Shared WebdriverIO configuration. Platform configs (`wdio.ios.conf.ts`, `wdio.android.conf.ts`) extend it
  * with capabilities. WebdriverIO loads `.env` automatically, so every variable in `.env.example` can be set there.
@@ -17,21 +40,9 @@ export const config: WebdriverIO.Config = {
   connectionRetryTimeout: 180_000,
   connectionRetryCount: 1,
 
-  // WebdriverIO starts and stops the project-local Appium 3 server (and its drivers from package.json).
   port: 4723,
-  services: [
-    [
-      'appium',
-      {
-        logPath: './logs',
-        appiumStartTimeout: 60_000,
-        args: {
-          // Lets the Android helpers run `adb shell` (screen lock + fingerprint enrollment).
-          allowInsecure: ['uiautomator2:adb_shell'],
-        },
-      },
-    ],
-  ],
+  // No insecure Appium features here; the Android config adds the one it needs.
+  services: [appiumService()],
 
   framework: 'mocha',
   mochaOpts: {
