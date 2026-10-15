@@ -1,41 +1,69 @@
-import { assertEnvironment, getByClass, getByText, executeInHomeScreenContext } from './Utils.js';
+import AndroidSettings from './Android.ts';
+import { envOr, executeInHomeScreenContext, getByTextMatches, isShownWithin } from './Utils.ts';
 
+export type IosBiometricType = 'faceId' | 'touchId';
+
+/** Fingerprint ids registered on the emulator. Any other id is treated as a non-matching finger. */
+export const FINGERPRINT = {
+  enrolled: Number(envOr('FINGERPRINT_ID', '1')),
+  unknown: Number(envOr('WRONG_FINGERPRINT_ID', '2')),
+} as const;
+
+/**
+ * Cross-platform biometrics for simulators/emulators, built on the drivers' `mobile:` extensions:
+ * - iOS (XCUITest): `mobile: enrollBiometric` and `mobile: sendBiometricMatch`
+ * - Android (UiAutomator2, emulator only): `mobile: fingerprint`, after enrolling a fingerprint in Settings
+ */
 class Biometrics {
-  private get iosAllowBiometrics() {
-    return getByClass('**/XCUIElementTypeButton[`name == "Allow" OR name == "OK"`]');
+  private get iosType(): IosBiometricType {
+    return envOr('IOS_BIOMETRIC_TYPE', 'faceId') === 'touchId' ? 'touchId' : 'faceId';
   }
 
-  private get androidAllowBiometrics() {
-    return getByText('Touch the fingerprint sensor');
+  /** The system "Allow <app> to use Face ID?" prompt, shown once per install. */
+  private get iosAllowPrompt() {
+    return $('-ios class chain:**/XCUIElementTypeButton[`label == "Allow" OR label == "OK"`]');
   }
 
-  async submitBiometricSignIn(successful: boolean) {
+  private get androidPrompt() {
+    return getByTextMatches('(?i)(Please log in|Login with.*|Touch the fingerprint sensor)');
+  }
+
+  /** Enroll biometrics on the device. On Android this walks the Settings fingerprint wizard. */
+  async enroll(): Promise<void> {
     if (driver.isIOS) {
-      return await this.allowIosBiometricUsage(successful);
+      await driver.execute('mobile: enrollBiometric', { isEnabled: true });
+
+      return;
     }
 
-    return await this.allowAndroidBiometricUsage(
-      successful ? Number(assertEnvironment('DEFAULT_PIN')) : Number(assertEnvironment('INCORRECT_PIN')),
-    );
+    await AndroidSettings.enrollFingerprint(FINGERPRINT.enrolled);
   }
 
-  async allowAndroidBiometricUsage(fingerprintId: number) {
-    await this.androidAllowBiometrics.waitForDisplayed({ timeout: 3 * 1000 });
-    await driver.fingerPrint(fingerprintId);
+  /** Answer the biometric prompt the app just triggered, with a matching or a non-matching biometric. */
+  async authenticate(successful: boolean): Promise<void> {
+    if (driver.isIOS) {
+      await this.acceptIosPermissionPrompt();
+      await driver.execute('mobile: sendBiometricMatch', { type: this.iosType, match: successful });
+
+      return;
+    }
+
+    await this.androidPrompt.waitForDisplayed({ timeout: 10_000 });
+    await driver.execute('mobile: fingerprint', {
+      fingerprintId: successful ? FINGERPRINT.enrolled : FINGERPRINT.unknown,
+    });
   }
 
-  async allowIosBiometricUsage(successful: boolean) {
+  /**
+   * The Face ID permission alert belongs to SpringBoard, not to the app, so it is only reachable from the
+   * home-screen context. It is shown once per install; when it is absent this is a no-op.
+   */
+  private async acceptIosPermissionPrompt(): Promise<void> {
     await executeInHomeScreenContext(async () => {
-      try {
-        await this.iosAllowBiometrics
-          .waitForDisplayed({ timeout: 3 * 1000 })
-          .then(async () => await this.iosAllowBiometrics.click());
-      } catch (error) {
-        /* do nothing */
+      if (await isShownWithin(this.iosAllowPrompt, 3_000)) {
+        await this.iosAllowPrompt.click();
       }
     });
-
-    return driver.touchId(successful);
   }
 }
 

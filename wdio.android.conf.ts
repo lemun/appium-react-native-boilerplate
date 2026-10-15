@@ -1,33 +1,35 @@
-import { config as baseConfig } from './wdio.conf.js';
-import { assertEnvironment } from './src/helpers/Utils.js';
-import { execSync } from 'child_process';
+import { appiumService, config as baseConfig } from './wdio.conf.ts';
+import { resolveAppPath } from './src/config/appPath.ts';
+import { DEMO_APP } from './src/config/demoApp.ts';
 
-const findApkPath = (): string => {
-  const path = execSync(
-    `powershell "Get-ChildItem -Path '${assertEnvironment('REACT_NATIVE_PATH')}' -Recurse -Filter 'app-debug.apk' | Where-Object { $_.FullName -like '*\\android\\app\\build\\outputs\\apk\\debug\\*' } | Select-Object -First 1 -ExpandProperty FullName"`,
-    { encoding: 'utf8' }
-  ).trim();
-
-  if (!path) {
-    throw new Error(`Android APK not found in path.`);
-  }
-
-  return path;
-};
+const env = process.env;
 
 export const config: WebdriverIO.Config = {
   ...baseConfig,
-
+  services: [
+    // `mobile: shell` is an insecure Appium feature. Only the Android fingerprint enrollment in
+    // src/helpers/Android.ts needs it (biometrics.spec.ts); the server still listens on loopback only.
+    appiumService({ allowInsecure: 'uiautomator2:adb_shell' }),
+  ],
   capabilities: [
     {
-      ...baseConfig.capabilities![0],
       platformName: 'Android',
-      'appium:deviceName': assertEnvironment('ANDROID_DEVICE_NAME'),
-      'appium:platformVersion': assertEnvironment('ANDROID_PLATFORM_VERSION'),
       'appium:automationName': 'UiAutomator2',
-      'appium:app': findApkPath(),
-      'appium:appWaitActivity': `${assertEnvironment('BUNDLE_ID')}.MainActivity`,
-      'appium:autoGrantPermissions': assertEnvironment('AUTO_GRANT_PERMISSIONS') === 'true',
+      'appium:deviceName': env['ANDROID_DEVICE_NAME'] || 'Android Emulator',
+      // With ANDROID_AVD set, Appium boots that emulator itself (`emulator -list-avds`).
+      ...(env['ANDROID_AVD'] ? { 'appium:avd': env['ANDROID_AVD'], 'appium:avdLaunchTimeout': 300_000 } : {}),
+      ...(env['ANDROID_PLATFORM_VERSION'] ? { 'appium:platformVersion': env['ANDROID_PLATFORM_VERSION'] } : {}),
+      ...(env['ANDROID_UDID'] ? { 'appium:udid': env['ANDROID_UDID'] } : {}),
+      'appium:app': resolveAppPath('android'),
+      ...(env['APP_PATH'] ? {} : { 'appium:appWaitActivity': DEMO_APP.android.activity }),
+      'appium:autoGrantPermissions': true,
+      'appium:newCommandTimeout': 240,
+      'appium:uiautomator2ServerInstallTimeout': 120_000,
+      'appium:adbExecTimeout': 60_000,
     },
   ],
+  before: async () => {
+    // UiSelector lookups wait 10s by default before failing; 3s keeps negative checks fast.
+    await driver.updateSettings({ waitForSelectorTimeout: 3_000 });
+  },
 };
