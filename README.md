@@ -1,22 +1,25 @@
 # Appium Boilerplate (React Native, TypeScript)
 
 [![CI](https://github.com/lemun/appium-react-native-boilerplate/actions/workflows/ci.yml/badge.svg)](https://github.com/lemun/appium-react-native-boilerplate/actions/workflows/ci.yml)
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Appium](https://img.shields.io/badge/Appium_3-662d91?style=for-the-badge&logo=appium&logoColor=white)](https://appium.io)
-[![WebdriverIO](https://img.shields.io/badge/WebdriverIO_10-EA5906?style=for-the-badge&logo=webdriverio&logoColor=white)](https://webdriver.io)
-[![Mocha](https://img.shields.io/badge/Mocha-8D6748?style=for-the-badge&logo=mocha&logoColor=white)](https://mochajs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Appium](https://img.shields.io/badge/Appium_3-662d91?logo=appium&logoColor=white)](https://appium.io)
+[![WebdriverIO](https://img.shields.io/badge/WebdriverIO_10-EA5906?logo=webdriverio&logoColor=white)](https://webdriver.io)
+[![Mocha](https://img.shields.io/badge/Mocha-8D6748?logo=mocha&logoColor=white)](https://mochajs.org)
 
 Cross-platform (iOS + Android) end-to-end tests for React Native apps with **WebdriverIO 10**, **Appium 3** and
 **Mocha**, written in strict TypeScript. Specs run against the public
 [WebdriverIO native demo app](https://github.com/webdriverio/native-demo-app) (a React Native / Expo app), so you can
 clone the repo and run them without your own app. Swap in your app with one environment variable.
 
-> **Status:** the specs are written against demo app v2.2.0 and pass typecheck, lint and unit tests. They have not
-> yet been run on a simulator or emulator in this revision.
+> **Status:** the specs are written against demo app v2.2.0 and pass typecheck, lint and unit tests. On an iOS 26.5
+> simulator (iPhone 17 Pro, 2026-10-17) four of the eight spec files pass: `drag-and-drop`, `forms`, `navigation` and
+> `webview`. `login` and `swipe` fail on selectors that match more than one element, `data-persistence` fails
+> scrolling to an element, and the `biometrics` session timed out on start. These are known issues; the Android
+> specs have not been run in this revision.
 
 ## What the specs cover
 
-| Spec                       | What it shows                                                                               |
+| Spec                       | What it covers                                                                              |
 | -------------------------- | ------------------------------------------------------------------------------------------- |
 | `navigation.spec.ts`       | Tab bar navigation and a side menu, using typed screen objects                              |
 | `login.spec.ts`            | Login and sign-up forms, inline validation errors, native alerts                            |
@@ -76,6 +79,9 @@ clone the repo and run them without your own app. Swap in your app with one envi
    ```
 
    Run one spec with `npm run ios -- --spec src/specs/login.spec.ts`.
+
+   If Xcode's SDK is newer than the iOS runtime you have installed, Appium fails with "No supported iOS runtime
+   with version ...". Set `IOS_PLATFORM_VERSION` to the runtime you have (`xcrun simctl list runtimes`).
 
 6. Open the HTML report (Allure 3, no Java required):
 
@@ -223,11 +229,9 @@ logs, screenshots and Allure results as an artifact.
 - `src/config/appiumServer.test.ts` starts neither Appium nor a device. It runs each platform config through
   `@wdio/appium-service` and Appium's own CLI parser, then checks the address and the insecure features the server
   would actually get. It runs in `npm run validate`.
-- As of 2026-10-15, `npm audit` reports 20 flagged packages (15 critical, 4 high, 1 moderate). All of them trace back
-  to dependencies bundled inside the Appium drivers, which npm cannot update or override.
-  [SECURITY.md](SECURITY.md) lists each advisory and explains why none is reachable with the configs in this repo:
-  loopback-only server, local app paths, no MJPEG URL. Adding options that make the driver fetch a URL you supply
-  changes that analysis.
+- `npm audit` flags packages that are bundled inside the Appium drivers, which npm cannot update or override.
+  [SECURITY.md](SECURITY.md) lists each advisory and explains why none is reachable with the configs in this repo.
+  Adding options that make the driver fetch a URL you supply changes that analysis.
 
 ## Credits
 
