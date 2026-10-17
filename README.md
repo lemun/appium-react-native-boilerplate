@@ -1,10 +1,23 @@
-# Appium Boilerplate (React Native, TypeScript)
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner-light.png">
+  <img src="docs/assets/banner-light.png" alt="Appium React Native Boilerplate: WebdriverIO 10, Appium 3 and TypeScript end-to-end tests for iOS and Android" width="100%">
+</picture>
+
+### Typed, cross-platform E2E tests for React Native apps.
 
 [![CI](https://github.com/lemun/appium-react-native-boilerplate/actions/workflows/ci.yml/badge.svg)](https://github.com/lemun/appium-react-native-boilerplate/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Appium](https://img.shields.io/badge/Appium_3-662d91?logo=appium&logoColor=white)](https://appium.io)
 [![WebdriverIO](https://img.shields.io/badge/WebdriverIO_10-EA5906?logo=webdriverio&logoColor=white)](https://webdriver.io)
 [![Mocha](https://img.shields.io/badge/Mocha-8D6748?logo=mocha&logoColor=white)](https://mochajs.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
+[Quick start](#quickstart) · [How it works](#how-it-works) · [What the specs cover](#what-the-specs-cover) · [Configuration](#environment-variables) · [CI](#ci) · [Security](#security)
+
+</div>
 
 Cross-platform (iOS + Android) end-to-end tests for React Native apps with **WebdriverIO 10**, **Appium 3** and
 **Mocha**, written in strict TypeScript. Specs run against the public
@@ -16,6 +29,33 @@ clone the repo and run them without your own app. Swap in your app with one envi
 > `webview`. `login` and `swipe` fail on selectors that match more than one element, `data-persistence` fails
 > scrolling to an element, and the `biometrics` session timed out on start. These are known issues; the Android
 > specs have not been run in this revision.
+
+## Why this boilerplate
+
+- **Runs out of the box.** Specs target the public WebdriverIO demo app, which `npm run app:download` fetches
+  (version pinned, SHA-256 verified). No app of your own needed to see it work.
+- **One suite, two platforms.** Cross-platform selector helpers and screen objects keep specs free of
+  platform branches.
+- **Nothing global.** Appium 3 and both drivers are project dependencies; WebdriverIO starts and stops the server.
+- **Strict TypeScript and linting.** Type-aware ESLint plus Prettier, enforced by `npm run validate` on every push.
+- **Your app with one variable.** Set `APP_PATH` and `APP_ID`, replace the screens and specs, keep the helpers.
+- **Safe defaults.** The Appium server binds to loopback only, and a unit test checks it.
+
+## How it works
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/how-it-works-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/how-it-works.svg">
+    <img src="docs/assets/how-it-works.svg" alt="Architecture diagram: TypeScript specs call screen objects, selectors and helpers. The WebdriverIO local runner with Mocha loads the platform config, runs the specs and starts and stops a loopback-only Appium server on 127.0.0.1, which drives XCUITest on an iOS simulator or UiAutomator2 on an Android emulator or device, both running the WebdriverIO demo app. Run output is spec and Allure results plus screenshots on test failure." width="880">
+  </picture>
+</p>
+
+Specs call **screen objects**; screen objects find elements through the **selector helpers**; WebdriverIO sends the
+commands to a project-local **Appium 3** server, which drives the app on an iOS simulator (XCUITest) or an Android
+emulator (UiAutomator2). `wdio.conf.ts` holds the shared setup (Appium service, Mocha, reporters, failure
+screenshots) and `wdio.ios.conf.ts` / `wdio.android.conf.ts` add the platform capabilities. See
+[Project structure](#project-structure) and [How screen objects are structured](#how-screen-objects-are-structured).
 
 ## What the specs cover
 
@@ -232,6 +272,16 @@ logs, screenshots and Allure results as an artifact.
 - `npm audit` flags packages that are bundled inside the Appium drivers, which npm cannot update or override.
   [SECURITY.md](SECURITY.md) lists each advisory and explains why none is reachable with the configs in this repo.
   Adding options that make the driver fetch a URL you supply changes that analysis.
+
+## Contributing
+
+Run `npm run validate` (typecheck, lint, format check, unit tests) before committing; it needs no device. The
+conventions for specs, screen objects and selectors are in [AGENTS.md](AGENTS.md).
+
+## License
+
+[MIT](LICENSE) © Shai Sinai. Parts of `src/helpers` build on MIT-licensed upstream projects; see Credits below and
+[LICENSE](LICENSE).
 
 ## Credits
 
